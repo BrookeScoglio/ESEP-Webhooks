@@ -3,18 +3,28 @@ import os
 import requests
 
 def lambda_handler(event, context):
-    input_json = json.loads(event['body'])
+    # Parse the GitHub webhook payload
+    payload = json.loads(event['body'])
 
-    payload = {
-        'text': f"Issue Created: {input_json['issue']['html_url']}"
+    # Extract the HTML URL of the issue created
+    issue_html_url = payload['issue']['html_url']
+
+    # Construct the Slack notification message
+    slack_message = {
+        'text': f"Issue Created: {issue_html_url}"
     }
 
+    # Get the Slack webhook URL from environment variables
     slack_url = os.environ.get('SLACK_URL')
 
-    response = requests.post(slack_url, json=payload)
-    response_text = response.text
+    # Send the Slack notification
+    response = requests.post(slack_url, json=slack_message)
+
+    # Prepare the response for API Gateway
+    response_body = response.text
+    response_status_code = response.status_code
 
     return {
-        'statusCode': response.status_code,
-        'body': response_text
+        'statusCode': response_status_code,
+        'body': response_body
     }
